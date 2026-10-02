@@ -11,8 +11,8 @@
 #include <WebServer.h>
 
 // === НАСТРОЙКА WIFI ===
-const char* ssid     = "MikroTik-4B5910";
-const char* password = "JPEFWMD3WY";
+const char* ssid     = "";
+const char* password = "";
 const char* apSsid   = "ESP32S3-CAM";
 const char* apPassword = "camviewer";
 

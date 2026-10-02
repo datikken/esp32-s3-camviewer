@@ -1,160 +1,131 @@
-# ESP32-S3-CAM Viewer (GOOUUU V1.5)
+# ESP32-S3-CAM Viewer
 
-Приём и воспроизведение MJPEG-видеопотока с платы **GOOUUU ESP32-S3-CAM V1.5** на Linux.
+Просмотр MJPEG-видео с ESP32-S3-CAM на macOS, Windows и Linux.
 
-## Требования
+По умолчанию прошивка запускает точку доступа `ESP32S3-CAM` с паролем
+`camviewer`. Подключите к ней компьютер; адрес камеры — `192.168.4.1`, и его
+можно не указывать при запуске viewer. Для работы через домашний роутер задайте
+его SSID и пароль в `firmware/esp32s3_cam.ino`; назначенный адрес появится в
+Serial Monitor как `WiFi IP:`.
 
-### Системные пакеты (Ubuntu/Debian)
+## Прошивка камеры одной командой
 
-```bash
-sudo apt update
-sudo apt install -y build-essential cmake pkg-config \
-    libopencv-dev libcurl4-openssl-dev
-```
-
-### Arch Linux
-
-```bash
-sudo pacman -S base-devel cmake opencv curl
-```
-
-### Fedora
-
-```bash
-sudo dnf install gcc-c++ cmake opencv-devel libcurl-devel
-```
-
-## Сборка
-
-### Вариант 1: через Make
-
-```bash
-cd esp32s3-cam-viewer
-make          # сборка
-make run      # сборка + запуск (URL по умолчанию)
-```
-
-Запуск с своим URL:
-
-```bash
-make run URL=http://192.168.4.1/stream
-```
-
-### Вариант 2: через CMake напрямую
-
-```bash
-cd esp32s3-cam-viewer
-cmake -B build -DCMAKE_BUILD_TYPE=Release .
-cmake --build build -j$(nproc)
-./build/esp32s3-cam-viewer --url http://192.168.4.1/stream
-```
-
-### Вариант 3: в CLion
-
-1. File → Open → выбрать `CMakeLists.txt` в папке проекта.
-2. CLion автоматически определит конфигурацию CMake.
-3. Убедитесь, что в Toolchain выбран GCC (`/usr/bin/gcc` и `/usr/bin/g++`).
-4. Нажмите Run (зелёная стрелка).
-5. Аргументы командной строки можно задать в
-   Run → Edit Configurations → Program arguments:
-   ```
-    --url http://192.168.4.1/stream
-   ```
-
-## Использование
-
-```bash
-# Базовый запуск (ESP32S3-CAM access point)
-./build/esp32s3-cam-viewer
-
-# Свой URL
-./build/esp32s3-cam-viewer --url http://192.168.4.1/stream
-
-# Полный экран
-./build/esp32s3-cam-viewer --url http://192.168.4.1/stream --fullscreen
-
-# Свой размер окна
-./build/esp32s3-cam-viewer --url http://192.168.4.1/stream --width 1024 --height 768
-```
-
-### Управление
-
-| Клавиша | Действие |
-|---------|----------|
-| ESC / Q | Выход |
-| S       | Сохранить снимок в файл `snapshot_XXXX.jpg` |
-| R       | Переподключиться к потоку |
-| F       | Полноэкранный режим вкл/выкл |
-
-## Аргументы
-
-```
---url <URL>        URL MJPEG-потока (по умолчанию: http://192.168.4.1/stream)
---snapshot <URL>   URL для снимка (по умолчанию: http://192.168.4.1/capture)
---width <N>        Ширина окна (по умолчанию: 800)
---height <N>       Высота окна (по умолчанию: 600)
---fullscreen       Полноэкранный режим
---help             Справка
-```
-
-## Структура проекта
-
-```
-esp32s3-cam-viewer/
-├── CMakeLists.txt        — конфигурация CMake (для CLion)
-├── Makefile              — обёртка над CMake (make + gcc)
-├── README.md             — этот файл
-├── src/
-│   └── main.cpp          — основная программа (OpenCV)
-└── firmware/
-    └── esp32s3_cam.ino   — прошивка для ESP32-S3-CAM (Arduino)
-```
-
-## Подключение камеры
-
-Прошивка находится в `firmware/esp32s3_cam.ino`.
-
-### VS Code + PlatformIO
-
-В проект добавлен `platformio.ini`: PlatformIO собирает код из `firmware/`,
-не затрагивая Linux-просмотрщик в `src/`.
-
-1. Установите расширение **PlatformIO IDE** в VS Code и откройте корневую
-    папку проекта.
-2. В **PlatformIO Project Tasks → esp32-s3-cam → General** выполните **Build**,
-    затем **Upload**.
-3. Откройте **Monitor**. Скорость Serial Monitor — `115200`.
-
-В конфигурации указан порт `/dev/ttyUSB0` (CH340); если система назначит
-другой порт, измените `upload_port` и `monitor_port` в `platformio.ini`.
-
-### Arduino IDE
-
-Выберите плату `ESP32S3 Dev Module` и включите PSRAM (Octal), затем загрузите
-прошивку.
-
-Для доступа к последовательному порту в Linux добавьте пользователя в группу
-`dialout` и заново войдите в систему:
+Подключите плату по USB. В Linux один раз добавьте пользователя в группу
+`dialout` и заново войдите в систему, чтобы получить доступ к serial-порту:
 
 ```bash
 sudo usermod -aG dialout "$USER"
 ```
 
-По умолчанию плата создаёт Wi-Fi сеть `ESP32S3-CAM` с паролем `camviewer`.
-Подключите компьютер к этой сети и запустите `make run` или приложение.
+Изменение не применяется к уже запущенным терминалам. Чтобы продолжить без
+выхода из системы, выполните `newgrp dialout` и проверьте `id -nG`: в выводе
+должна быть группа `dialout`. Запускайте следующую команду в этом же терминале.
+Либо полностью выйдите из сеанса Linux и войдите снова.
 
-Чтобы использовать домашний роутер вместо точки доступа, укажите его SSID
-и пароль в начале файла прошивки и загрузите её повторно. Если подключение
-к роутеру не удастся за 15 секунд, плата автоматически создаст точку доступа.
-Адрес камеры в режиме точки доступа — `192.168.4.1`; IP в режиме роутера
-появится в Serial Monitor (115200 baud).
+Из корня проекта выполните команду: она соберёт и загрузит прошивку, после
+чего откроет Serial Monitor.
 
-Потоки доступны по адресам:
+```bash
+make camera
+```
 
-- `http://<IP>/`        — веб-страница с потоком
-- `http://<IP>/stream`  — MJPEG-поток
-- `http://<IP>/capture` — одиночный снимок (JPEG)
+## macOS
 
-`lsusb` показывает плату как USB-UART адаптер CH340; видео идёт по Wi-Fi,
-а не как USB-видеоустройство. Для проверки загрузки прошивки подключите
-Serial Monitor к соответствующему `/dev/ttyUSB*` на скорости 115200 baud.
+1. Установите Xcode Command Line Tools и Homebrew:
+
+```bash
+xcode-select --install
+```
+
+Инструкция по установке Homebrew: [brew.sh](https://brew.sh/).
+
+2. Установите Git, CMake и OpenCV:
+
+```bash
+brew install git cmake opencv
+```
+
+## Windows
+
+1. Установите [MSYS2](https://www.msys2.org/), затем откройте терминал **MSYS2 UCRT64**.
+2. Обновите MSYS2. Если установщик попросит закрыть терминал, откройте его снова
+   и повторите команду:
+
+```bash
+pacman -Syu
+```
+
+3. Установите компилятор, Git, CMake, Ninja и OpenCV:
+
+```bash
+pacman -S --needed git mingw-w64-ucrt-x86_64-toolchain \
+   mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja \
+   mingw-w64-ucrt-x86_64-opencv
+```
+
+Все дальнейшие команды Windows выполняйте в терминале **MSYS2 UCRT64**.
+
+## Linux
+
+Установите Git, CMake, компилятор C++ и OpenCV для своего дистрибутива.
+
+Ubuntu / Debian:
+
+```bash
+sudo apt update
+sudo apt install -y git cmake g++ libopencv-dev
+```
+
+Fedora:
+
+```bash
+sudo dnf install git cmake gcc-c++ opencv-devel
+```
+
+Arch Linux:
+
+```bash
+sudo pacman -S --needed git cmake gcc opencv
+```
+
+## Скачать, собрать и запустить
+
+> Перед запуском `make run` обязательно:
+> 1. подключитесь к Wi‑Fi сети камеры `ESP32S3-CAM` (пароль `camviewer`);
+> 2. выполните сборку проекта;
+> 3. только после этого запускайте `make run`.
+
+Клонируйте репозиторий и перейдите в его папку:
+
+```bash
+git clone https://github.com/datikken/esp32-s3-camviewer.git
+cd esp32-s3-camviewer
+```
+
+macOS:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_PREFIX_PATH="$(brew --prefix opencv)"
+cmake --build build --parallel
+./build/esp32s3-cam-viewer --url http://192.168.4.1/stream
+```
+
+Linux:
+
+```bash
+make build
+make run URL=http://192.168.4.1/stream
+```
+
+Windows (в терминале MSYS2 UCRT64):
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_PREFIX_PATH="$MINGW_PREFIX"
+cmake --build build --parallel
+./build/esp32s3-cam-viewer.exe --url http://192.168.4.1/stream
+```
+
+Если камера подключена к домашнему роутеру, замените `192.168.4.1` на адрес из
+Serial Monitor. В режиме точки доступа подключите компьютер к `ESP32S3-CAM`.
