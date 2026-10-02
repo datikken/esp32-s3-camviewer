@@ -1,0 +1,9 @@
+build/
+*.jpg
+*.o
+*.so
+*.a
+.idea/
+cmake-build-debug/
+cmake-build-release/
+.vscode/
