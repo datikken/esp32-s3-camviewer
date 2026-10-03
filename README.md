@@ -130,3 +130,7 @@ cmake --build build --parallel
 
 Если камера подключена к домашнему роутеру, замените `192.168.4.1` на адрес из
 Serial Monitor. В режиме точки доступа подключите компьютер к `ESP32S3-CAM`.
+
+
+## TODO 
+RTP/UDP - https://habr.com/ru/articles/987604/
